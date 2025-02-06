@@ -125,6 +125,6 @@ Prices of all the components are taken from the [Amazon](https://www.amazon.in/)
 - Jumper Wires
 
 # Demo
-![[Pasted image 20250206143705.png]]
-![[Pasted image 20250206143748.png]]
-![[Final.mp4]]
+![Car](Pasted_image_20250206143705.png)
+![Car & Controller](Pasted_image_20250206143748.png)
+![Demo Video](Final.mp4)
