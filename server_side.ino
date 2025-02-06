@@ -1,76 +1,186 @@
-#include <Wire.h>
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 
 // Wi-Fi credentials
-const char* ssid = "Your_Receiver_SSID";
-const char* password = "Your_Receiver_Password";
-const char* serverIP = "192.168.4.1";  // Receiver ESP IP (AP mode)
+const char* ssid = "";           // Replace with your Wi-Fi SSID
+const char* password = "";   // Replace with your Wi-Fi Password
 const uint16_t serverPort = 1234;
 
+WiFiServer server(serverPort);
 WiFiClient client;
 
-// MPU6050 I2C address
-const int MPU_ADDR = 0x68;
+// Motor control pins for L298N (adjust as per your wiring)
+// First L298N Motor (Left Wheels)
+const int L298N1_IN1 = 32;  // Left Wheel 1 - IN1 (GPIO32)
+const int L298N1_IN2 = 33;  // Left Wheel 1 - IN2 (GPIO33)
+const int L298N1_IN3 = 25;  // Left Wheel 2 - IN3 (GPIO25)
+const int L298N1_IN4 = 26;  // Left Wheel 2 - IN4 (GPIO26)
+const int L298N1_EN1 = 27;  // Enable pin for Left Wheel 1 (GPIO27)
+const int L298N1_EN2 = 14;  // Enable pin for Left Wheel 2 (GPIO14)
+
+// Second L298N Motor (Right Wheels)
+const int L298N2_IN1 = 12;  // Right Wheel 1 - IN1 (GPIO12)
+const int L298N2_IN2 = 13;  // Right Wheel 1 - IN2 (GPIO13)
+const int L298N2_IN3 = 2;   // Right Wheel 2 - IN3 (GPIO2)
+const int L298N2_IN4 = 15;  // Right Wheel 2 - IN4 (GPIO15)
+const int L298N2_EN1 = 4;   // Enable pin for Right Wheel 1 (GPIO4)
+const int L298N2_EN2 = 5;   // Enable pin for Right Wheel 2 (GPIO5)
 
 void setup() {
   Serial.begin(115200);
-  Wire.begin(D2, D1);  // SDA, SCL pins for ESP8266
 
-  // Initialize MPU6050
-  Wire.beginTransmission(MPU_ADDR);
-  Wire.write(0x6B);  // Power management register
-  Wire.write(0);     // Wake up the sensor
-  Wire.endTransmission();
+  // Configure motor pins as output
+  pinMode(L298N1_IN1, OUTPUT);
+  pinMode(L298N1_IN2, OUTPUT);
+  pinMode(L298N1_IN3, OUTPUT);
+  pinMode(L298N1_IN4, OUTPUT);
+  pinMode(L298N1_EN1, OUTPUT);
+  pinMode(L298N1_EN2, OUTPUT);
 
-  // Connect to Wi-Fi
-  Serial.println("Connecting to Wi-Fi...");
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("\nConnected to Wi-Fi");
+  pinMode(L298N2_IN1, OUTPUT);
+  pinMode(L298N2_IN2, OUTPUT);
+  pinMode(L298N2_IN3, OUTPUT);
+  pinMode(L298N2_IN4, OUTPUT);
+  pinMode(L298N2_EN1, OUTPUT);
+  pinMode(L298N2_EN2, OUTPUT);
+
+  // Initialize all motor pins to LOW
+  stopMotors();
+
+  // Start Wi-Fi in AP mode
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(ssid, password);
+
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("AP IP Address: ");
+  Serial.println(IP);
+
+  server.begin();
+  Serial.println("Server started");
 }
 
 void loop() {
-  // Connect to server if not already connected
-  if (!client.connected()) {
-    Serial.println("Connecting to server...");
-    if (client.connect(serverIP, serverPort)) {
-      Serial.println("Connected to server");
-    } else {
-      Serial.println("Failed to connect to server");
-      delay(5000);
-      return;
+  if (!client || !client.connected()) {
+    client = server.available(); // Wait for a new client
+    if (client) {
+      Serial.println("Client connected");
+    }
+    return;
+  }
+
+  // Check if data is available from the client
+  if (client.available()) {
+    String command = client.readStringUntil('\n');
+    command.trim(); // Remove extra whitespace
+    Serial.println("Received command: " + command);
+
+    // Control the car based on the command
+    if (command == "forward") {
+      moveForward();
+    } else if (command == "backward") {
+      moveBackward();
+    } else if (command == "left") {
+      turnLeft();
+    } else if (command == "right") {
+      turnRight();
+    } else if (command == "stop") {
+      stopMotors();
     }
   }
+}
 
-  // Read accelerometer data from MPU6050
-  Wire.beginTransmission(MPU_ADDR);
-  Wire.write(0x3B);  // Starting register for accelerometer data
-  Wire.endTransmission(false);
-  Wire.requestFrom(MPU_ADDR, 6, true);  // Request 6 bytes (accel X, Y, Z)
+// Function to move forward
+void moveForward() {
+  // Left Wheels
+  digitalWrite(L298N1_IN1, HIGH);
+  digitalWrite(L298N1_IN2, LOW);
+  digitalWrite(L298N1_IN3, LOW);
+  digitalWrite(L298N1_IN4, HIGH);
+  // Right Wheels
+  digitalWrite(L298N2_IN1, HIGH);
+  digitalWrite(L298N2_IN2, LOW);
+  digitalWrite(L298N2_IN3, LOW);
+  digitalWrite(L298N2_IN4, HIGH);
 
-  int16_t accelX = Wire.read() << 8 | Wire.read();
-  int16_t accelY = Wire.read() << 8 | Wire.read();
-  int16_t accelZ = Wire.read() << 8 | Wire.read();
+  // Enable motors for speed control (PWM)
+  analogWrite(L298N1_EN1, 128); // Max speed for Left Wheel 1
+  analogWrite(L298N1_EN2, 128); // Max speed for Left Wheel 2
+  analogWrite(L298N2_EN1, 128); // Max speed for Right Wheel 1
+  analogWrite(L298N2_EN2, 128); // Max speed for Right Wheel 2
+}
 
-  // Determine car command based on tilt
-  String command = "stop";  // Default command
+// Function to move backward
+void moveBackward() {
+  
+   // Left Wheels
+  digitalWrite(L298N1_IN1, LOW);
+  digitalWrite(L298N1_IN2, HIGH);
+  digitalWrite(L298N1_IN3, HIGH);
+  digitalWrite(L298N1_IN4, LOW);
+  // Right Wheels
+  digitalWrite(L298N2_IN1, LOW);
+  digitalWrite(L298N2_IN2, HIGH);
+  digitalWrite(L298N2_IN3, HIGH);
+  digitalWrite(L298N2_IN4, LOW);
 
-  if (accelY > 15000) {
-    command = "forward";
-  } else if (accelY < -15000) {
-    command = "backward";
-  } else if (accelX > 15000) {
-    command = "right";
-  } else if (accelX < -15000) {
-    command = "left";
-  }
+  // Enable motors for speed control (PWM)
+  analogWrite(L298N1_EN1, 128); // Max speed for Left Wheel 1
+  analogWrite(L298N1_EN2, 128); // Max speed for Left Wheel 2
+  analogWrite(L298N2_EN1, 128); // Max speed for Right Wheel 1
+  analogWrite(L298N2_EN2, 128); // Max speed for Right Wheel 2
+}
 
-  // Send command to the receiver
-  client.println(command);
-  Serial.println("Sent command: " + command);
+// Function to turn left
+void turnLeft() {
+  // Left Wheels (Stop)
+  digitalWrite(L298N1_IN1, LOW);
+  digitalWrite(L298N1_IN2, LOW);
+  digitalWrite(L298N1_IN3, LOW);
+  digitalWrite(L298N1_IN4, LOW);
+  // Right Wheels (Move forward)
+  digitalWrite(L298N2_IN1, HIGH);
+  digitalWrite(L298N2_IN2, LOW);
+  digitalWrite(L298N2_IN3, LOW);
+  digitalWrite(L298N2_IN4, HIGH);
 
-  delay(100);  // Adjust delay for responsiveness
+  // Enable motors for speed control (PWM)
+  analogWrite(L298N2_EN1, 60); // Max speed for Right Wheel 1
+  analogWrite(L298N2_EN2, 60); // Max speed for Right Wheel 2
+}
+
+// Function to turn right
+void turnRight() {
+  // Left Wheels (Move forward)
+  digitalWrite(L298N1_IN1, HIGH);
+  digitalWrite(L298N1_IN2, LOW);
+  digitalWrite(L298N1_IN3, LOW);
+  digitalWrite(L298N1_IN4, HIGH);
+  // Right Wheels (Stop)
+  digitalWrite(L298N2_IN1, LOW);
+  digitalWrite(L298N2_IN2, LOW);
+  digitalWrite(L298N2_IN3, LOW);
+  digitalWrite(L298N2_IN4, LOW);
+
+  // Enable motors for speed control (PWM)
+  analogWrite(L298N1_EN1, 60); // Max speed for Left Wheel 1
+  analogWrite(L298N1_EN2, 60); // Max speed for Left Wheel 2
+}
+
+// Function to stop all motors
+void stopMotors() {
+  // Left Wheels
+  digitalWrite(L298N1_IN1, LOW);
+  digitalWrite(L298N1_IN2, LOW);
+  digitalWrite(L298N1_IN3, LOW);
+  digitalWrite(L298N1_IN4, LOW);
+  // Right Wheels
+  digitalWrite(L298N2_IN1, LOW);
+  digitalWrite(L298N2_IN2, LOW);
+  digitalWrite(L298N2_IN3, LOW);
+  digitalWrite(L298N2_IN4, LOW);
+
+  // Disable motors (PWM)
+  analogWrite(L298N1_EN1, 0);  // Stop Left Wheel 1
+  analogWrite(L298N1_EN2, 0);  // Stop Left Wheel 2
+  analogWrite(L298N2_EN1, 0);  // Stop Right Wheel 1
+  analogWrite(L298N2_EN2, 0);  // Stop Right Wheel 2
 }
