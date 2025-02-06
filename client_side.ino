@@ -2,8 +2,8 @@
 #include <Wire.h>
 #include <MPU6050.h>
 
-const char* ssid = "10";           // Same SSID as car ESP32
-const char* password = "miaomiao*"; // Same password as car ESP32
+const char* ssid = "";           // Same SSID as car ESP32
+const char* password = ""; // Same password as car ESP32
 const char* carIP = "192.168.4.1";  // Default IP of ESP32 AP mode
 const uint16_t serverPort = 1234;
 
