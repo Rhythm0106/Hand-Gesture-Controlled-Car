@@ -116,11 +116,11 @@ This code runs on another **ESP32 connected to two L298N motor drivers**. It rec
         - `"stop"` → Stops all motors.
 
 # BOM (Bill Of Material)
-Prices of all the components are taken from the [[https://www.amazon.in/ |Amazon]] and the price written is approximate.
-- 2 x ESP32 - :LiIndianRupee:530
-- 2 x L298N Motor Driver - :LiIndianRupee:200
-- 1 x MPU6050 - :LiIndianRupee:300
-- 1 x Car Chassis - :LiIndianRupee:700
+Prices of all the components are taken from the [Amazon](https://www.amazon.in/) and the price written is approximate.
+- 2 x ESP32 - ₹530
+- 2 x L298N Motor Driver - ₹200
+- 1 x MPU6050 - ₹300
+- 1 x Car Chassis - ₹700
 - Jumper Wires
 
 # Demo
