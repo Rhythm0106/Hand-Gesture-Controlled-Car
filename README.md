@@ -3,38 +3,10 @@ A Hand Gestures Controlled Car made using MPU6050 to detect hand movements and t
 
 # Things Used In This Project
 ## Hardware Components
- ```embed
-title: "Robocraze DIY 4-wheel Drive Robot Smart Car Chassis Kits with Speed Encoder For RC Car"
-image: "https://m.media-amazon.com/images/I/61MpJD378VL._SL1000_.jpg"
-description: "Robocraze DIY 4-wheel Drive Robot Smart Car Chassis Kits with Speed Encoder For RC Car : Amazon.in: Toys & Games"
-url: "https://amzn.in/d/43pDXdl"
-```
-```embed
-title: "SquadPixel Esp-32 Wifi, Bluetooth, Dual Core Chip Development Board (ESP-WROOM-32)"
-image: "https://m.media-amazon.com/images/I/611SuZX5oYL._SL1000_.jpg"
-description: "SquadPixel Esp-32 Wifi, Bluetooth, Dual Core Chip Development Board (ESP-WROOM-32) : Amazon.in: Computers & Accessories"
-url: "https://amzn.in/d/bSr773R"
-```
-```embed
-title: "Electronic Spices L298 Motor Driver Circuit Board"
-image: "https://m.media-amazon.com/images/I/31nRJq29BmL._SY445_SX342_QL70_FMwebp_.jpg"
-description: "Electronic Spices L298 Motor Driver Circuit Board : Amazon.in: Industrial & Scientific"
-url: "https://amzn.in/d/ivnSnFy"
-```
-```embed
-title: "B07H3XH1TB?ref=cm_sw_r_cp_ud_dp_HDZQGV51Y230VW35Z0PG&ref_=cm_sw_r_cp_ud_dp_HDZQGV51Y230VW35Z0PG&social_share=cm_sw_r_cp_ud_dp_HDZQGV51Y230VW35Z0PG"
-image: "https://images-eu.ssl-images-amazon.com/images/I/41kY16MFJvL._AC_UL70_SR70,70_.jpg"
-description: "Robocraze MPU-6050 Module 3 Axis Gyroscope+Accelerometer Module compatible with Arduino : Amazon.in: Industrial & Scientific"
-url: "https://amzn.in/d/9KjnsFC"
-```
+![Hardware Components]()
 
 ## Software Components
-```embed
-title: "Software"
-image: "https://content.arduino.cc/assets/arduino_logo_1200x630-01.png"
-description: "Open-source electronic prototyping platform enabling users to create interactive electronic objects."
-url: "https://www.arduino.cc/en/software"
-```
+![Software Components]()
 
 
 # Circuit Diagram
