@@ -1,112 +1,67 @@
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
+#include <Wire.h>
+#include <MPU6050.h>
 
-// Wi-Fi credentials
-const char* ssid = "";
-const char* password = "";
+const char* ssid = "10";           // Same SSID as car ESP32
+const char* password = "miaomiao*"; // Same password as car ESP32
+const char* carIP = "192.168.4.1";  // Default IP of ESP32 AP mode
 const uint16_t serverPort = 1234;
 
-WiFiServer server(serverPort);
 WiFiClient client;
-
-// Motor control pins (adjust as per your wiring)
-const int IN1 = D1;
-const int IN2 = D2;
-const int IN3 = D3;
-const int IN4 = D4;
+MPU6050 mpu;
 
 void setup() {
   Serial.begin(115200);
+  Wire.begin();
 
-  // Configure motor pins as output
-  pinMode(IN1, OUTPUT);
-  pinMode(IN2, OUTPUT);
-  pinMode(IN3, OUTPUT);
-  pinMode(IN4, OUTPUT);
+  // Initialize MPU6050
+  mpu.initialize();
+  if (!mpu.testConnection()) {
+    Serial.println("MPU6050 connection failed!");
+    while (1);
+  }
+  Serial.println("MPU6050 connected!");
 
-  // Initialize motor pins to LOW
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, LOW);
+  // Connect to the car's ESP32 Wi-Fi (AP Mode)
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to Car...");
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
 
-  // Start Wi-Fi in AP mode
-  WiFi.mode(WIFI_AP);
-  WiFi.softAP(ssid, password);
-
-  IPAddress IP = WiFi.softAPIP();
-  Serial.print("AP IP Address: ");
-  Serial.println(IP);
-
-  server.begin();
-  Serial.println("Server started");
+  Serial.println("\nConnected to Car!");
 }
 
 void loop() {
-  if (!client || !client.connected()) {
-    client = server.available();  // Wait for a new client
-    if (client) {
-      Serial.println("Client connected");
-    }
-    return;
+  int16_t ax, ay, az, gx, gy, gz;
+  mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+
+  String command = "stop";  // Default to stop
+
+  // Movement logic (adjust thresholds as needed)
+  if (ay > 10000) {
+    command = "forward";
+  } else if (ay < -10000) {
+    command = "backward";
+  } else if (ax > 5000) {
+    command = "right";
+  } else if (ax < -5000) {
+    command = "left";
   }
 
-  // Check if data is available from the client
-  if (client.available()) {
-    String command = client.readStringUntil('\n');
-    command.trim();  // Remove extra whitespace
-    Serial.println("Received command: " + command);
+  // Send command only if Wi-Fi is connected
+  if (WiFi.status() == WL_CONNECTED) {
+    if (!client.connected()) {
+      client.connect(carIP, serverPort);
+    }
 
-    // Control the car based on the command
-    if (command == "forward") {
-      moveForward();
-    } else if (command == "backward") {
-      moveBackward();
-    } else if (command == "left") {
-      turnLeft();
-    } else if (command == "right") {
-      turnRight();
-    } else if (command == "stop") {
-      stopMotors();
+    if (client.connected()) {
+      client.println(command);
+      Serial.println("Sent: " + command);
     }
   }
-}
 
-// Function to move forward
-void moveForward() {
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
-}
-
-// Function to move backward
-void moveBackward() {
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, HIGH);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, HIGH);
-}
-
-// Function to turn left
-void turnLeft() {
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, HIGH);
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
-}
-
-// Function to turn right
-void turnRight() {
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, HIGH);
-}
-
-// Function to stop the motors
-void stopMotors() {
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, LOW);
+  delay(200);  // Adjust responsiveness
 }
