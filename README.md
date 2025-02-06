@@ -3,10 +3,10 @@ A Hand Gestures Controlled Car made using MPU6050 to detect hand movements and t
 
 # Things Used In This Project
 ## Hardware Components
-![Hardware Components]()
+![Hardware Components](Obsidian_NupzHEdBXV.png)
 
 ## Software Components
-![Software Components]()
+![Software Components](Obsidian_xGNUzbjId3.png)
 
 
 # Circuit Diagram
